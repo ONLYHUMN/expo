@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- added the ability to read and write "starred" property of contacts on Android ([#33208](https://github.com/expo/expo/pull/33208) by [@NorseGaud](https://github.com/NorseGaud))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
