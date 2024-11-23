@@ -28,6 +28,8 @@ import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import kotlinx.coroutines.launch
 import java.util.UUID
+import android.util.Log
+
 
 data class ContactPage(
   val data: List<Contact>,
@@ -63,7 +65,7 @@ private val defaultFields = setOf(
   "phoneNumbers", "emails", "addresses", "note", "birthday", "dates", "instantMessageAddresses",
   "urlAddresses", "extraNames", "relationships", "phoneticFirstName", "phoneticLastName", "phoneticMiddleName",
   "namePrefix", "nameSuffix", "name", "firstName", "middleName", "lastName", "nickname", "id", "jobTitle",
-  "company", "department", "image", "imageAvailable", "note"
+  "company", "department", "image", "imageAvailable", "note", "starred"
 )
 
 const val RC_EDIT_CONTACT = 2137
@@ -90,7 +92,8 @@ private val DEFAULT_PROJECTION = listOf(
   CommonDataKinds.StructuredName.PHONETIC_FAMILY_NAME,
   CommonDataKinds.Organization.COMPANY,
   CommonDataKinds.Organization.TITLE,
-  CommonDataKinds.Organization.DEPARTMENT
+  CommonDataKinds.Organization.DEPARTMENT,
+  ContactsContract.Data.STARRED
 )
 
 class ContactQuery : Record {
@@ -415,6 +418,8 @@ class ContactsModule : Module() {
       contact.relationships = it
     }
 
+    data.safeGet<Boolean>("starred")?.let { contact.starred = it }
+
     return contact
   }
 
@@ -557,6 +562,8 @@ class ContactsModule : Module() {
     if (keysToFetch.contains("phoneticMiddleName")) projection.add(CommonDataKinds.StructuredName.PHONETIC_MIDDLE_NAME)
     if (keysToFetch.contains("namePrefix")) projection.add(CommonDataKinds.StructuredName.PREFIX)
     if (keysToFetch.contains("nameSuffix")) projection.add(CommonDataKinds.StructuredName.SUFFIX)
+
+    if (keysToFetch.contains("starred")) projection.add(ContactsContract.Data.STARRED)
 
     return QueryArguments(
       projection.toTypedArray(),
