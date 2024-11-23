@@ -78,7 +78,7 @@ export async function test({ describe, it, xdescribe, jasmine, expect, afterAll 
     };
 
     afterAll(async () => {
-      await Promise.all(createdContacts.map(async ({ id }) => Contacts.removeContactAsync(id)));
+      await Promise.all(createdContacts.map(async ({ id }) => await Contacts.removeContactAsync(id)));
     });
 
     it('Contacts.createContactsAsync()', async () => {
@@ -141,6 +141,23 @@ export async function test({ describe, it, xdescribe, jasmine, expect, afterAll 
       };
 
       return createContact(fields);
+    }
+
+    async function createContactWithStarred() {
+      const fields = {
+        [Contacts.Fields.Starred]: true,
+        [Contacts.Fields.FirstName]: 'My',
+        [Contacts.Fields.LastName]: 'Best Friend',
+      };
+
+      return createContact(fields);
+    }
+
+    if (isAndroid) {
+      it('Contacts.createContactAsync() with starred', async () => {
+        const contactId = await createContactWithStarred();
+        expect(typeof contactId).toBe('string');
+      });
     }
 
     it('Contacts.createContactAsync() with image', async () => {
@@ -210,11 +227,15 @@ export async function test({ describe, it, xdescribe, jasmine, expect, afterAll 
       });
 
       expect(contacts.data.length > 0).toBe(true);
-      contacts.data.forEach(({ id, name, phoneNumbers, emails }) => {
+      contacts.data.forEach(({ id, name, phoneNumbers, emails, starred }) => {
         expect(typeof id === 'string' || typeof id === 'number').toBe(true);
         expect(typeof name === 'string' || typeof name === 'undefined').toBe(true);
         expect(Array.isArray(phoneNumbers) || typeof phoneNumbers === 'undefined').toBe(true);
         expect(Array.isArray(emails) || typeof emails === 'undefined').toBe(true);
+        if (isAndroid) {
+          expect(typeof starred === 'boolean').toBe(true);
+          expect(starred).toBe(false);
+        }
       });
     });
 
@@ -336,7 +357,7 @@ export async function test({ describe, it, xdescribe, jasmine, expect, afterAll 
       expect(contacts.data.length).toBeLessThan(3);
     });
 
-    if (Platform.OS === 'android') {
+    if (isAndroid) {
       it('Contacts.getContactsAsync() sorts contacts by first name', async () => {
         const { data: contacts } = await Contacts.getContactsAsync({
           fields: [Contacts.SortTypes.FirstName],
@@ -347,7 +368,7 @@ export async function test({ describe, it, xdescribe, jasmine, expect, afterAll 
 
         await sortContacts(contacts, Contacts.SortTypes.FirstName, expect);
       });
-      it('Contacts.getContactsAsync()sorts contacts by last name', async () => {
+      it('Contacts.getContactsAsync() sorts contacts by last name', async () => {
         const { data: contacts } = await Contacts.getContactsAsync({
           fields: [Contacts.SortTypes.LastName],
           sort: Contacts.SortTypes.LastName,
@@ -356,6 +377,28 @@ export async function test({ describe, it, xdescribe, jasmine, expect, afterAll 
         });
 
         await sortContacts(contacts, Contacts.SortTypes.LastName, expect);
+      });
+      it('Contacts.getContactsAsync() returns starred contacts', async () => {
+        const { data: contacts } = await Contacts.getContactsAsync({
+          fields: [Contacts.Fields.Starred],
+
+        });
+        expect(contacts.length).toBeGreaterThan(0);
+        contacts.forEach((contact) => {
+          if (contact.firstName === 'My') {
+            expect(contact.starred).toBe(true);
+          } else {
+            expect(contact.starred).toBe(false);
+          }
+        });
+      });
+
+    }
+    // ios does not support starred so test that it's undefined
+    if (!isAndroid) {
+      it('Contacts.getContactsAsync() returns undefined for starred for ios', async () => {
+        const { data: contacts } = await Contacts.getContactsAsync({});
+        expect(contacts[0].starred).toBeUndefined();
       });
     }
 
@@ -625,5 +668,6 @@ export async function test({ describe, it, xdescribe, jasmine, expect, afterAll 
         }
       }
     });
+
   });
 }
