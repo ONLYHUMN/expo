@@ -130,7 +130,7 @@ class ContactsModule : Module() {
     get() = appContext.permissions ?: throw Exceptions.PermissionsModuleNotFound()
 
   private val currentActivity: Activity
-    get() = appContext.throwingActivity
+    get() = appContext.currentActivity ?: throw IllegalStateException("Activity not found")
 
   override fun definition() = ModuleDefinition {
     Name("ExpoContacts")
