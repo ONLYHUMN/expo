@@ -593,7 +593,8 @@ export declare function addContactAsync(contact: Contact, containerId?: string):
  * @example
  * ```js
  * const contact = {
- *   id: '161A368D-D614-4A15-8DC6-665FDBCFAE55',
+ *   [Contacts.Fields.Name]: 'Charles E Lorata, III', // required
+ *   [Contacts.Fields.ContactType]: 'person', // required
  *   [Contacts.Fields.FirstName]: 'Drake',
  *   [Contacts.Fields.Company]: 'Young Money',
  * };
